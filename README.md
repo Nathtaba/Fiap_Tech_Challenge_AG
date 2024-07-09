@@ -20,7 +20,7 @@ Este projeto implementa um algoritmo genético para resolver o Tech Challenge Fa
 
 2. Instale as dependências:
     ```
-    pip install pygame matplotlib
+    pip install pygame numpy pandas matplotlib
     ```
 
 3. Certifique-se de ter o arquivo de dados `Pesquisa_Dados_e_Mapas.xlsx` no mesmo diretório que o script.
@@ -35,7 +35,7 @@ Obs: Escolha as cidades que gostaria de simular e adicione na guia "Fixo" do arq
 
 Execute o script com o seguinte comando:
 ```
-python tsp.py
+python Tech_Challenge_RS.py
 ```
 
 ## Estrutura do Código
@@ -70,4 +70,6 @@ python tsp.py
 
 ## Fonte dos Dados
 Site: http://feedados.fee.tche.br/feedados/#!home/listarvariaveis (Caracterização do Território\Distância de Porto Alegre\2023 (km))
+
 O arquivo Pesquisa_Dados_e_Mapas.xlsx foi obtido no site do Departamento Autônomo de Estradas de Rodagem do Rio Grande do Sul e contém dados de coordenadas das cidades do Rio Grande do Sul.
+
