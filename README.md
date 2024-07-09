@@ -1,6 +1,12 @@
 # Otimização de Rotas com Algoritmos Genéticos em Pygame
 
-Este projeto implementa um algoritmo genético para resolver o Tech Challenge Fase 2 da Fiap utilizando Pygame para visualização. A rota é otimizada para minimizar a distância total percorrida por um caminhão que sai de Porto Alegre, visita algumas cidades do Rio Grande do Sul e retorna a Porto Alegre.
+O TSP é um problema clássico de otimização que visa encontrar a rota mais curta possível para um automóvel visitar um conjunto de cidades e retornar ao ponto de partida. Este projeto utiliza um Algoritmo Genético (GA) para resolver o problema TSP para cidades no estado do Rio Grande do Sul, Brasil. A solução é implementada usando Pygame, uma biblioteca Python para criar aplicativos multimídia, para visualizar as cidades e a rota ideal.
+
+## Objetivos do Projeto:
+
+Implementar um Algoritmo Genético (GA) para resolver o problema TSP para um conjunto de cidades no Rio Grande do Sul, Brasil.
+Visualizar as cidades e a rota ideal usando Pygame.
+Avaliar o desempenho do GA em termos de encontrar a rota mais curta possível.
 
 ## Requisitos
 
