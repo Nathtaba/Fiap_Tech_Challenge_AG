@@ -12,7 +12,6 @@ Avaliar o desempenho do GA em termos de encontrar a rota mais curta possível.
 
 - Python 3.7 ou superior
 - Pygame
-- NumPy
 - Pandas
 - Matplotlib
 
@@ -20,13 +19,13 @@ Avaliar o desempenho do GA em termos de encontrar a rota mais curta possível.
 
 1. Clone este repositório:
     ```
-    git clone https://github.com/seu-usuario/seu-repositorio.git
-    cd seu-repositorio
+    git clone https://github.com/Nathtaba/Fiap_Tech_Challenge_AG.git
+    cd Fiap_Tech_Challenge_AG
     ```
 
 2. Instale as dependências:
     ```
-    pip install pygame numpy pandas matplotlib
+    pip install pygame pandas matplotlib
     ```
 
 3. Certifique-se de ter o arquivo de dados `Pesquisa_Dados_e_Mapas.xlsx` no mesmo diretório que o script.
