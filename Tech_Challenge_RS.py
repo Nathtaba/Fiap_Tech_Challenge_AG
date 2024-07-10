@@ -1,26 +1,24 @@
+## Configuração Inicial: Importação de bibliotecas
 import pygame
 from pygame.locals import *
 import random
 import numpy as np
 import pandas as pd
-import sys
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_agg import FigureCanvasAgg
 import matplotlib
-#O backend "Agg"  não depende de uma interface gráfica de usuário (GUI) 
+from matplotlib.backends.backend_agg import FigureCanvasAgg
+matplotlib.use("Agg") #O backend "Agg"  não depende de uma interface gráfica de usuário (GUI) 
 # e é utilizado para renderizar gráficos em arquivos (como PNGs) em vez de exibi-los em uma janela interativa
-matplotlib.use("Agg")
 from typing import List, Tuple
 import itertools
 import textwrap
 import math
 
-# Defina a escala de conversão de pixels para metros
-PIXEL_TO_METER_RATIO = 1  # 1 pixel = 1 metro, ajuste conforme necessário
+#Definição de funções iniciais para cálculos e criação de rotas.
 
-# Função para calcular a distância euclidiana entre duas coordenadas
+# Função para calcular a distância euclidiana entre duas coordenadas que representa distâncias reais em quilômetros
 def calcular_distancia(coord1, coord2):
-    return np.sqrt((coord1[0] - coord2[0]) ** 2 + (coord1[1] - coord2[1]) ** 2)
+    return math.sqrt((coord1[0] - coord2[0]) ** 2 + (coord1[1] - coord2[1]) ** 2)
 
 # Função para calcular a distância total de uma rota
 def calcular_distancia_total(rota, coordenadas_cidades):
@@ -35,25 +33,26 @@ def calcular_distancia_total(rota, coordenadas_cidades):
     distancia_total += calcular_distancia(coordenadas_cidades[cidade_final], coordenadas_cidades[cidade_inicial])
     return distancia_total
 
-# Função para criar um indivíduo (rota aleatória)
+# Função para criar um indivíduo (rota aleatória) começando e terminando em Porto Alegre.
 def criar_individuo(n_cidades):
     individuo = list(range(1, n_cidades))  # Começa de 1 para não incluir Porto Alegre (índice 0)
     random.shuffle(individuo)
     individuo = [0] + individuo + [0]  # Adiciona Porto Alegre no início e no fim
     return individuo
 
-# Função para gerar a população inicial
+# Função para criar uma população inicial de indivíduos.
 def gerar_populacao_inicial(tamanho_populacao, n_cidades):
     return [criar_individuo(n_cidades) for _ in range(tamanho_populacao)]
 
-# Função de mutação
+# Função que aplica mutação em um indivíduo com uma certa probabilidade. Troca duas posições aleatórias na rota.
 def mutacao(individuo, taxa_mutacao):
     if random.random() < taxa_mutacao:
         i, j = random.sample(range(1, len(individuo) - 1), 2)  # Não inclui o primeiro e o último índice
         individuo[i], individuo[j] = individuo[j], individuo[i]
     return individuo
 
-# Função de crossover (cruzamento)
+# Função de crossover (cruzamento) realiza o cruzamento entre dois pais para gerar um filho. 
+# Garante que o filho contenha genes de ambos os pais sem repetições.
 def cruzamento(pai1, pai2):
     tamanho = len(pai1)
     inicio, fim = sorted(random.sample(range(1, tamanho - 1), 2))
@@ -70,21 +69,21 @@ def cruzamento(pai1, pai2):
 
     return filho
 
-# Função de seleção por torneio
+# Função de seleção por torneio onde seleciona um indivíduo com base em um torneio entre vários indivíduos da população.
 def selecao_por_torneio(populacao, k=3):
     torneio = random.sample(populacao, k)
     torneio.sort(key=lambda x: calcular_distancia_total(x, coordenadas_cidades))
     return torneio[0]
 
-# Função para avaliar a população
+# Função para avaliar a aptidão (distância total) de todos os indivíduos da população.
 def avaliar_populacao(populacao, coordenadas_cidades):
     return [calcular_distancia_total(individuo, coordenadas_cidades) for individuo in populacao]
 
-# Função para ordenar a população por aptidão
+# Função para ordenar a população com base na aptidão dos indivíduos.
 def ordenar_populacao(populacao, aptidao):
     return [ind for ind, _ in sorted(zip(populacao, aptidao), key=lambda x: x[1])]
 
-# Configurações do Pygame
+# Configurações do Pygame para definição de largura, altura, taxa de atualização, cores e inicialização do Pygame.
 WIDTH, HEIGHT = 1200, 800  # Ajustar largura para incluir o gráfico
 NODE_RADIUS = 8
 FPS = 30
@@ -94,7 +93,7 @@ MAP_X_OFFSET = 600  # Deslocar as cidades para o lado direito da janela
 POPULATION_SIZE = 50
 MUTATION_PROBABILITY = 0.05
 
-# Definir cores
+# Definir cores do gráfico
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
@@ -104,27 +103,27 @@ GREEN = (0, 255, 0)
 # Inicializar Pygame
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Best Path - RS by Pygame")
+pygame.display.set_caption("Melhor Rota - RS by Pygame")
 clock = pygame.time.Clock()
 generation_counter = itertools.count(start=1)  # Start the counter at 1
 
-# Leitura do banco de dados
+# Leitura do banco de dados onde carrega os dados de um arquivo Excel contendo informações geoespaciais das cidades
 df = pd.read_excel('Pesquisa_Dados_e_Mapas.xlsx')
 
-# Inicialização das coordenadas das cidades
+# Inicialização das coordenadas definindo as coordenadas de Porto Alegre e preenche as coordenadas para as demais cidades do dataset.
 coordenadas_cidades = {}
 cidades = ['Porto Alegre'] + df['Municípios'].tolist()
 
-# Definir coordenadas de Porto Alegre (exemplo, ajustar conforme necessário)
-coordenadas_cidades['Porto Alegre'] = (-51206533,-30031771)  # Exemplo de coordenadas
+# Definir coordenadas de Porto Alegre
+coordenadas_cidades['Porto Alegre'] = (-51206533,-30031771)  # Coordenadas reais de PA.
 
-# Preencher coordenadas para outras cidades
+# Preencher coordenadas para outras cidades conforme arquivo xlsx
 for cidade in cidades[1:]:
     x_coord = int(df.loc[df['Municípios'] == cidade, 'Coordenadas X'].iloc[0])
     y_coord = int(df.loc[df['Municípios'] == cidade, 'Coordenadas Y'].iloc[0])
     coordenadas_cidades[cidade] = (x_coord, y_coord)
     
-# Definir os limites da tela
+# Definir os limites da tela para a visualização das cidades na tela do Pygame.
 X_MIN, X_MAX = MAP_X_OFFSET, 1000
 Y_MIN, Y_MAX = 50, 600
 
@@ -140,11 +139,11 @@ def normalizar_coord(coord, min_real, max_real, min_screen, max_screen):
 
 # Preencher coordenadas normalizadas
 for cidade, (lat, lon) in coordenadas_cidades.items():
-    x_coord = normalizar_coord(lat, lat_min, lat_max, X_MIN, X_MAX)
-    y_coord = HEIGHT - normalizar_coord(lon, lon_min, lon_max, Y_MIN, Y_MAX)  # Inverter a coordenada Y
+    x_coord = normalizar_coord(lon, lon_min, lon_max, MAP_X_OFFSET, X_MAX)
+    y_coord = normalizar_coord(lat, lat_min, lat_max, Y_MIN, Y_MAX)
     coordenadas_cidades[cidade] = (int(x_coord), int(y_coord))  # Convertendo para inteiros
 
-# Funções de desenho
+# Função para desenhar as cidades na tela do Pygame, utilizando diferentes cores para Porto Alegre e outras cidades.
 def draw_cities(screen, coordenadas, color, radius):
     for cidade, (x, y) in coordenadas.items():
         cor = GREEN if cidade == 'Porto Alegre' else color
@@ -157,19 +156,20 @@ def draw_cities(screen, coordenadas, color, radius):
             text = font.render(cidade, True, BLACK)
             text_rect = text.get_rect(center=(x + radius + 10, y))
             screen.blit(text, text_rect)
-
+            
+# Função para desenha os caminhos da melhor rota encontrada na tela.
 def draw_paths(screen, path, color, width=1):
     for i in range(len(path) - 1):
         cidade_atual = cidades[path[i]]
         proxima_cidade = cidades[path[i + 1]]
         pygame.draw.line(screen, color, coordenadas_cidades[cidade_atual], coordenadas_cidades[proxima_cidade], width)
-    # Adicionar a volta para a cidade inicial
+    # Adicionar a volta para a cidade inicial Porto Alegre
     cidade_final = cidades[path[-1]]
     cidade_inicial = cidades[path[0]]
     pygame.draw.line(screen, color, coordenadas_cidades[cidade_final], coordenadas_cidades[cidade_inicial], width)
 
-
-def draw_plot(screen: pygame.Surface, x: list, y: list, x_label: str = 'Generation', y_label: str = 'Fitness') -> None:
+# Função para desenhar um gráfico de fitness (distância ao longo das gerações) na tela do Pygame.
+def draw_plot(screen: pygame.Surface, x: list, y: list, x_label: str = 'Geração', y_label: str = 'Aptidão') -> None:
     fig, ax = plt.subplots(figsize=(4, 4), dpi=100)
     ax.plot(x, y)
     ax.set_ylabel(y_label)
@@ -185,10 +185,10 @@ def draw_plot(screen: pygame.Surface, x: list, y: list, x_label: str = 'Generati
     surf = pygame.image.fromstring(raw_data, size, "RGB")
     screen.blit(surf, (0, 0))
 
-# Definir retângulo para informações
+# Define um retângulo na tela do Pygame para exibir informações como geração, melhor aptidão e caminho da melhor solução.
 info_rect = pygame.Rect(10, HEIGHT - 150, 1100, 140)
     
-# Função para renderizar texto na tela do Pygame
+# Função para renderizar as informações dentro do retângulo definido na tela do Pygame.
 def render_info_frame(screen, rect, generation, melhor_aptidao, nomes_melhor_solucao):
     pygame.draw.rect(screen, WHITE, rect)  # Limpar área do quadro
     pygame.draw.rect(screen, BLACK, rect, 2)  # Desenhar borda do quadro
@@ -200,21 +200,21 @@ def render_info_frame(screen, rect, generation, melhor_aptidao, nomes_melhor_sol
     font = pygame.font.SysFont(None, 25)
     
     # Renderizar geração
-    generation_text = font.render(f"Generation: {generation}°", True, BLACK)
+    generation_text = font.render(f"Geração: {generation}°", True, BLACK)
     screen.blit(generation_text, (rect.left + margin, rect.top + margin))
     
     # Renderizar melhor aptidão
     Day = math.ceil(((melhor_aptidao*2)/60)/24) #calcula em quantos dias aproximadamente realizará a rota
-    aptidao_text = font.render(f"Best Fitness: {round(melhor_aptidao, 2)} km - ~ {Day} days", True, BLACK)
+    aptidao_text = font.render(f"Melhor aptidão: {round(melhor_aptidao, 2)} km", True, BLACK)
     screen.blit(aptidao_text, (rect.left + margin, rect.top + margin + line_height))
     
     # Converter índices de cidade para nomes de cidades
     nomes_melhor_solucao = [cidades[indice] for indice in melhor_solucao]
     
-    # Renderizar caminho da melhor solução (quebrando em várias linhas se necessário)
-    path_text = f"Best Path: {', '.join(nomes_melhor_solucao)}"
+    # Renderizar caminho da melhor solução
+    path_text = f"Melhor rota: {', '.join(nomes_melhor_solucao)}"
     # Quebrar o texto em várias linhas
-    lines = textwrap.wrap(path_text, width=110)  # Quebrar em linhas de até 30 caracteres
+    lines = textwrap.wrap(path_text, width=110)  # Quebrar em linhas de até 110 caracteres
     for i, line in enumerate(lines):
         path_line = font.render(line, True, BLACK)
         screen.blit(path_line, (rect.left + margin, rect.top + margin + line_height * (i + 2)))
@@ -222,63 +222,64 @@ def render_info_frame(screen, rect, generation, melhor_aptidao, nomes_melhor_sol
     # Atualizar a tela
     pygame.display.flip()
         
-# Gerar população inicial
+# Gerar população inicial de rotas
 populacao = gerar_populacao_inicial(POPULATION_SIZE, len(cidades))
+# Listas para armazenar a melhor aptidão e as melhores soluções encontradas ao longo das gerações.
 melhor_aptidao_valores = []
 melhores_solucoes = []
 
 # Definir quantidade máxima de gerações
 #MAX_GENERATIONS = 1000  # Ajuste conforme necessário
 
-# Loop principal do Pygame
-running = True
+# LOOP PRINCIPAL no Pygame
+running = True # Variável de controle para manter o loop do Pygame em execução.
 while running:
-    for event in pygame.event.get():
+    for event in pygame.event.get(): #Captura eventos como fechar a janela ou pressionar uma tecla para encerrar o programa.
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_q:
                 running = False
                 
-    generation = next(generation_counter)
-    
-    # Verificar se atingiu a quantidade máxima de gerações
+    generation = next(generation_counter) #Contador de geração atual.
+
+    # Caso queira definir uma quantidade máxima de gerações
     #if generation > MAX_GENERATIONS:
         #running = False
 
-    aptidao_populacao = avaliar_populacao(populacao, coordenadas_cidades)
+    aptidao_populacao = avaliar_populacao(populacao, coordenadas_cidades) #Avalia a aptidão de toda a população.
 
-    populacao = ordenar_populacao(populacao, aptidao_populacao)
+    populacao = ordenar_populacao(populacao, aptidao_populacao) #Ordena a população com base na aptidão.
 
+    #Armazenam a melhor aptidão e a melhor solução da população atual.
     melhor_aptidao = calcular_distancia_total(populacao[0], coordenadas_cidades)
-    melhor_solucao = populacao[0]
-    
+    melhor_solucao = populacao[0] 
     melhor_aptidao_valores.append(melhor_aptidao)
     melhores_solucoes.append(melhor_solucao)
     
     screen.fill(WHITE)
 
-    # Desenhar cidades e caminho
+    # Desenha as cidades e a rota
     draw_cities(screen, coordenadas_cidades, RED, NODE_RADIUS)
     
     draw_paths(screen, melhor_solucao, BLUE, width=3)
     draw_paths(screen, populacao[1], (128, 128, 128), width=1)
     
-    # Desenhar gráfico
+    # Desenha o gráfico de fitness na tela do Pygame
     draw_plot(screen, list(range(len(melhor_aptidao_valores))), 
-              melhor_aptidao_valores, y_label="Fitness - Distance (pxls)")
+              melhor_aptidao_valores, y_label="Aptidão - Distancia (km)")
     
     nomes_melhor_solucao = [cidades[indice] for indice in melhor_solucao]
     
-    # Exibir informações na tela
+    # Exibi as informações de geração, melhor aptidão e melhor caminho na tela do Pygame.
     render_info_frame(screen, info_rect, generation, melhor_aptidao, nomes_melhor_solucao)
 
 
      # Exibir informações no terminal
     print('--------------------------------------------------------')
-    print(f"Generation {generation}: \nBest fitness KM = {round(melhor_aptidao, 2)}\nPath: {nomes_melhor_solucao}")
+    print(f"Geração {generation}: \nMelhor aptidão Km = {round(melhor_aptidao, 2)}\nRota: {nomes_melhor_solucao}")
 
-    nova_populacao = populacao[:10]
+    nova_populacao = populacao[:10] #Gera uma nova população com seleção por torneio, cruzamento e mutação.
     while len(nova_populacao) < POPULATION_SIZE:
         pai1 = selecao_por_torneio(populacao)
         pai2 = selecao_por_torneio(populacao)
@@ -288,6 +289,7 @@ while running:
     
     populacao = nova_populacao
 
+    #Atualiza a tela do Pygame e controla a taxa de quadros por segundo.
     pygame.display.flip()
     clock.tick(FPS)
 
