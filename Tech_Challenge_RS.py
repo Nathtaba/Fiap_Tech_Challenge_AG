@@ -1,15 +1,12 @@
 ## Configuração Inicial: Importação de bibliotecas
 import pygame
-from pygame.locals import *
 import random
-import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 matplotlib.use("Agg") #O backend "Agg"  não depende de uma interface gráfica de usuário (GUI) 
 # e é utilizado para renderizar gráficos em arquivos (como PNGs) em vez de exibi-los em uma janela interativa
-from typing import List, Tuple
 import itertools
 import textwrap
 import math
