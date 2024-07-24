@@ -84,7 +84,7 @@ def ordenar_populacao(populacao, aptidao):
 WIDTH, HEIGHT = 1200, 800  # Ajustar largura para incluir o gráfico
 NODE_RADIUS = 8
 FPS = 30
-MAP_X_OFFSET = 600  # Deslocar as cidades para o lado direito da janela
+MAP_X_OFFSET = 500  # Deslocar as cidades para o lado direito da janela
 
 # GA
 POPULATION_SIZE = 50
@@ -95,6 +95,7 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 BLUE = (0, 0, 255)
+DARK_BLUE = (0, 0, 139)
 GREEN = (0, 255, 0)
 
 # Inicializar Pygame
@@ -121,8 +122,8 @@ for cidade in cidades[1:]:
     coordenadas_cidades[cidade] = (x_coord, y_coord)
     
 # Definir os limites da tela para a visualização das cidades na tela do Pygame.
-X_MIN, X_MAX = MAP_X_OFFSET, 1000
-Y_MIN, Y_MAX = 50, 600
+X_MIN, X_MAX = MAP_X_OFFSET, 1100
+Y_MIN, Y_MAX = 30, 630
 
 # Obter limites das coordenadas reais
 latitudes = [coord[0] for coord in coordenadas_cidades.values()]
@@ -134,11 +135,42 @@ lon_min, lon_max = min(longitudes), max(longitudes)
 def normalizar_coord(coord, min_real, max_real, min_screen, max_screen):
     return int(min_screen + (coord - min_real) / (max_real - min_real) * (max_screen - min_screen))
 
+def rotacionar_90_graus(x, y, x_max, y_max):
+    # Rotaciona (x, y) 90 graus para a direita em torno do ponto médio (centro do mapa)
+    x_centro = (MAP_X_OFFSET + X_MAX) // 2
+    y_centro = (Y_MIN + Y_MAX) // 2
+    
+    # Translada o ponto para que o centro do mapa seja a origem
+    x_trans = x - x_centro
+    y_trans = y - y_centro
+    
+    # Aplica a rotação
+    x_rot = y_trans
+    y_rot = -x_trans
+    
+    # Translada de volta para a posição original
+    x_novo = x_rot + x_centro
+    y_novo = y_rot + y_centro
+    
+    return x_novo, y_novo
+
 # Preencher coordenadas normalizadas
 for cidade, (lat, lon) in coordenadas_cidades.items():
+    # Normaliza as coordenadas
+    x_coord = normalizar_coord(lon, lon_min, lon_max, MAP_X_OFFSET+20, X_MAX-20)
+    y_coord = normalizar_coord(lat, lat_min, lat_max, Y_MIN, Y_MAX)
+    
+    # Rotaciona as coordenadas
+    x_rot, y_rot = rotacionar_90_graus(x_coord, y_coord, X_MAX-20, Y_MAX)
+    
+    # Atualiza o dicionário com as novas coordenadas
+    coordenadas_cidades[cidade] = (int(x_rot), int(y_rot))
+
+# Preencher coordenadas normalizadas
+""" for cidade, (lat, lon) in coordenadas_cidades.items():
     x_coord = normalizar_coord(lon, lon_min, lon_max, MAP_X_OFFSET, X_MAX)
     y_coord = normalizar_coord(lat, lat_min, lat_max, Y_MIN, Y_MAX)
-    coordenadas_cidades[cidade] = (int(x_coord), int(y_coord))  # Convertendo para inteiros
+    coordenadas_cidades[cidade] = (int(x_coord), int(y_coord))  # Convertendo para inteiros """
 
 # Função para desenhar as cidades na tela do Pygame, utilizando diferentes cores para Porto Alegre e outras cidades.
 def draw_cities(screen, coordenadas, color, radius):
@@ -151,7 +183,7 @@ def draw_cities(screen, coordenadas, color, radius):
             # Desenhar nome da cidade próximo ao círculo
             font = pygame.font.SysFont(None, 20)
             text = font.render(cidade, True, BLACK)
-            text_rect = text.get_rect(center=(x + radius + 10, y))
+            text_rect = text.get_rect(center=(x + radius + 10, y+10))
             screen.blit(text, text_rect)
             
 # Função para desenha os caminhos da melhor rota encontrada na tela.
@@ -181,6 +213,30 @@ def draw_plot(screen: pygame.Surface, x: list, y: list, x_label: str = 'Geraçã
     size = canvas.get_width_height()
     surf = pygame.image.fromstring(raw_data, size, "RGB")
     screen.blit(surf, (0, 0))
+
+def draw_directions(screen, font_size=20):
+    font = pygame.font.SysFont(None, font_size)
+    
+    # Norte
+    north_text = font.render("N", True, DARK_BLUE)
+    north_rect = north_text.get_rect(center=(MAP_X_OFFSET + (X_MAX - MAP_X_OFFSET) // 2, Y_MIN - 10))
+    screen.blit(north_text, north_rect)
+    
+    # Sul
+    south_text = font.render("S", True, DARK_BLUE)
+    south_rect = south_text.get_rect(center=(MAP_X_OFFSET + (X_MAX - MAP_X_OFFSET) // 2, Y_MAX + 10))
+    screen.blit(south_text, south_rect)
+    
+    # Leste
+    east_text = font.render("E", True, DARK_BLUE)
+    east_rect = east_text.get_rect(center=(X_MAX + 20, Y_MIN + (Y_MAX - Y_MIN) // 2))
+    screen.blit(east_text, east_rect)
+    
+    # Oeste
+    west_text = font.render("W", True, DARK_BLUE)
+    west_rect = west_text.get_rect(center=(MAP_X_OFFSET - 50, Y_MIN + (Y_MAX - Y_MIN) // 2))
+    screen.blit(west_text, west_rect)
+
 
 # Define um retângulo na tela do Pygame para exibir informações como geração, melhor aptidão e caminho da melhor solução.
 info_rect = pygame.Rect(10, HEIGHT - 150, 1100, 140)
@@ -270,6 +326,9 @@ while running:
     
     # Exibi as informações de geração, melhor aptidão e melhor caminho na tela do Pygame.
     render_info_frame(screen, info_rect, generation, melhor_aptidao, nomes_melhor_solucao)
+
+    # Desenha as direções (N, S, E, W) na tela do Pygame
+    draw_directions(screen, 40)
 
 
      # Exibir informações no terminal
